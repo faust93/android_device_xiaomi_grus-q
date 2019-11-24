@@ -394,7 +394,7 @@ PRODUCT_COPY_FILES += \
 
 # Power
 PRODUCT_PACKAGES += \
-    android.hardware.power@1.2-service.xiaomi_sdm710
+    android.hardware.power@1.2-service-grus
 
 # Permission
 PRODUCT_COPY_FILES += \

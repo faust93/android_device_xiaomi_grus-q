@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2019, The Linux Foundation. All rights reserved.
+ * Copyright (C) 2017-2019 The LineageOS Project
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -27,12 +28,15 @@
  * IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#define LOG_TAG "QTI PowerHAL"
+#define LOG_TAG "android.hardware.power@1.2-service-qti"
 
-#include <android/log.h>
-#include <utils/Log.h>
+// #define LOG_NDEBUG 0
+
 #include "Power.h"
+#include <android-base/file.h>
+#include <log/log.h>
 #include "power-common.h"
+#include "power-feature.h"
 
 namespace android {
 namespace hardware {
@@ -40,14 +44,14 @@ namespace power {
 namespace V1_2 {
 namespace implementation {
 
+using ::android::hardware::hidl_vec;
+using ::android::hardware::Return;
+using ::android::hardware::Void;
 using ::android::hardware::power::V1_0::Feature;
 using ::android::hardware::power::V1_0::PowerHint;
 using ::android::hardware::power::V1_0::PowerStatePlatformSleepState;
 using ::android::hardware::power::V1_0::Status;
 using ::android::hardware::power::V1_1::PowerStateSubsystem;
-using ::android::hardware::hidl_vec;
-using ::android::hardware::Return;
-using ::android::hardware::Void;
 
 Power::Power() {
     power_init();
@@ -59,18 +63,16 @@ Return<void> Power::setInteractive(bool interactive) {
 }
 
 Return<void> Power::powerHint(PowerHint_1_0 hint, int32_t data) {
-
     power_hint(static_cast<power_hint_t>(hint), data ? (&data) : NULL);
     return Void();
 }
 
-Return<void> Power::setFeature(Feature feature, bool activate)  {
-    set_feature(static_cast<feature_t>(feature), activate ? 1 : 0);
+Return<void> Power::setFeature(Feature feature, bool activate) {
+    set_device_specific_feature(static_cast<feature_t>(feature), activate ? 1 : 0);
     return Void();
 }
 
 Return<void> Power::getPlatformLowPowerStats(getPlatformLowPowerStats_cb _hidl_cb) {
-
     hidl_vec<PowerStatePlatformSleepState> states;
     states.resize(0);
 
@@ -79,7 +81,6 @@ Return<void> Power::getPlatformLowPowerStats(getPlatformLowPowerStats_cb _hidl_c
 }
 
 Return<void> Power::getSubsystemLowPowerStats(getSubsystemLowPowerStats_cb _hidl_cb) {
-
     hidl_vec<PowerStateSubsystem> subsystems;
 
     _hidl_cb(subsystems, Status::SUCCESS);
@@ -87,13 +88,41 @@ Return<void> Power::getSubsystemLowPowerStats(getSubsystemLowPowerStats_cb _hidl
 }
 
 Return<void> Power::powerHintAsync(PowerHint_1_0 hint, int32_t data) {
-
     return powerHint(hint, data);
 }
 
 Return<void> Power::powerHintAsync_1_2(PowerHint_1_2 hint, int32_t data) {
+    return powerHint(static_cast<PowerHint_1_0>(hint), data);
+}
 
-    return powerHint(static_cast<PowerHint_1_0> (hint), data);
+Return<int32_t> Power::getFeature(LineageFeature feature) {
+    if (feature == LineageFeature::SUPPORTED_PROFILES) {
+        return get_number_of_profiles();
+    }
+    return -1;
+}
+
+status_t Power::registerAsSystemService() {
+    status_t ret = 0;
+
+    ret = IPower::registerAsService();
+    if (ret != 0) {
+        ALOGE("Failed to register IPower (%d)", ret);
+        goto fail;
+    } else {
+        ALOGI("Successfully registered IPower");
+    }
+
+    ret = ILineagePower::registerAsService();
+    if (ret != 0) {
+        ALOGE("Failed to register ILineagePower (%d)", ret);
+        goto fail;
+    } else {
+        ALOGI("Successfully registered ILineagePower");
+    }
+
+fail:
+    return ret;
 }
 
 }  // namespace implementation

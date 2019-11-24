@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2012-2019, The Linux Foundation. All rights reserved.
+ * Copyright (C) 2017-2019 The LineageOS Project
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -38,15 +39,16 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#define LOG_TAG "QCOM PowerHAL"
+#define LOG_TAG "QTI PowerHAL"
 #include <hardware/hardware.h>
 #include <hardware/power.h>
 #include <linux/input.h>
-#include <utils/Log.h>
+#include <log/log.h>
 
 #include "hint-data.h"
 #include "performance.h"
 #include "power-common.h"
+#include "power-feature.h"
 #include "utils.h"
 
 static struct hint_handles handles[NUM_HINTS];
@@ -60,12 +62,9 @@ void power_init() {
     }
 }
 
-int __attribute__((weak)) power_hint_override(power_hint_t hint, void* data) {
+int __attribute__((weak)) power_hint_override(power_hint_t UNUSED(hint), void* UNUSED(data)) {
     return HINT_NONE;
 }
-
-/* Declare function before use */
-void interaction(int duration, int num_args, int opt_list[]);
 
 void power_hint(power_hint_t hint, void* data) {
     /* Check if this hint has been overridden. */
@@ -73,28 +72,18 @@ void power_hint(power_hint_t hint, void* data) {
         /* The power_hint has been handled. We can skip the rest. */
         return;
     }
-
     switch (hint) {
-        case POWER_HINT_VSYNC:
-            break;
         case POWER_HINT_VR_MODE:
             ALOGI("VR mode power hint not handled in power_hint_override");
             break;
-        case POWER_HINT_INTERACTION: {
-            int resources[] = {0x702, 0x20F, 0x30F};
-            int duration = 3000;
-
-            interaction(duration, sizeof(resources) / sizeof(resources[0]), resources);
-        } break;
-        //fall through below, hints will fail if not defined in powerhint.xml
+        // fall through below, hints will fail if not defined in powerhint.xml
         case POWER_HINT_SUSTAINED_PERFORMANCE:
         case POWER_HINT_VIDEO_ENCODE:
             if (data) {
                 if (handles[hint].ref_count == 0)
                     handles[hint].handle = perf_hint_enable((AOSP_DELTA + hint), 0);
 
-                if (handles[hint].handle > 0)
-                    handles[hint].ref_count++;
+                if (handles[hint].handle > 0) handles[hint].ref_count++;
             } else {
                 if (handles[hint].handle > 0) {
                     if (--handles[hint].ref_count == 0) {
@@ -106,16 +95,29 @@ void power_hint(power_hint_t hint, void* data) {
                 }
             }
             break;
+        case POWER_HINT_SET_PROFILE:
+            ALOGI("set profile power hint not handled in power_hint_override");
+            break;
         default:
             break;
     }
 }
 
-int __attribute__((weak)) set_interactive_override(int on) {
+int __attribute__((weak)) get_number_of_profiles() {
+    return 0;
+}
+
+int __attribute__((weak)) set_interactive_override(int UNUSED(on)) {
     return HINT_NONE;
 }
 
+#ifdef SET_INTERACTIVE_EXT
+extern void power_set_interactive_ext(int on);
+#endif
+
 void set_interactive(int on) {
+    static int display_hint_sent;
+
     if (!on) {
         /* Send Display OFF hint to perf HAL */
         perf_hint_enable(VENDOR_HINT_DISPLAY_OFF, 0);
@@ -124,14 +126,27 @@ void set_interactive(int on) {
         perf_hint_enable(VENDOR_HINT_DISPLAY_ON, 0);
     }
 
+    /**
+     * Ignore consecutive display-off hints
+     * Consecutive display-on hints are already handled
+     */
+    if (display_hint_sent && !on) return;
+
+    display_hint_sent = !on;
+
+#ifdef SET_INTERACTIVE_EXT
+    power_set_interactive_ext(on);
+#endif
+
     if (set_interactive_override(on) == HINT_HANDLED) {
         return;
+    } else {
+        ALOGI("Hint not handled in set_interactive_override");
     }
-
-    ALOGI("Got set_interactive hint");
 }
 
-void set_feature(feature_t feature, int state) {
+void __attribute__((weak))
+set_device_specific_feature(feature_t feature, int state) {
     switch (feature) {
 #ifdef TAP_TO_WAKE_NODE
         case POWER_FEATURE_DOUBLE_TAP_TO_WAKE: {
