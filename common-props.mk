@@ -64,7 +64,8 @@ PRODUCT_PROPERTY_OVERRIDES += \
 
 # Media
 PRODUCT_PROPERTY_OVERRIDES += \
-    audio.offload.video=true
+    audio.offload.video=true \
+    media.stagefright.thumbnail.prefer_hw_codecs=true
 
 # Memory optimizations
 PRODUCT_PROPERTY_OVERRIDES += \
