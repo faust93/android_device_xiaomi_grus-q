@@ -394,7 +394,8 @@ PRODUCT_COPY_FILES += \
 
 # Power
 PRODUCT_PACKAGES += \
-    android.hardware.power@1.2-service-grus
+    android.hardware.power@1.2-service-grus \
+    android.hardware.power.stats@1.0-service.mock
 
 # Permission
 PRODUCT_COPY_FILES += \
