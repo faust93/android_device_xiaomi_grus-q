@@ -25,12 +25,14 @@ PRODUCT_PROPERTY_OVERRIDES += \
 PRODUCT_PROPERTY_OVERRIDES += \
     persist.dbg.volte_avail_ovr=1 \
     persist.dbg.vt_avail_ovr=1 \
+    persist.dbg.ims_volte_enable=1 \
+    persist.radio.aosp_usr_pref_sel=true \
+    persist.vendor.radio.rat_on=combine \
+    persist.vendor.radio.data_ltd_sys_ind=1 \
+    persist.vendor.radio.data_con_rprt=1 \
+    persist.radio.calls.on.ims=1 \
+    persist.dbg.wfc_avail_ovr=1 \
     persist.vendor.ims.disableUserAgent=0
-
-#PRODUCT_PROPERTY_OVERRIDES += \
-#    persist.radio.rat_on=combine \
-#    persist.radio.data_ltd_sys_ind=1 \
-#    persist.radio.data_con_rprt=1
 
 # Disable sensors debug
 PRODUCT_PROPERTY_OVERRIDES += \
@@ -56,12 +58,10 @@ PRODUCT_PROPERTY_OVERRIDES += \
 
 # Surfaceflinger
 PRODUCT_PROPERTY_OVERRIDES += \
-    debug.sf.early_phase_offset_ns=500000 \
-    debug.sf.early_app_phase_offset_ns=500000 \
+    debug.sf.early_phase_offset_ns=1500000 \
+    debug.sf.early_app_phase_offset_ns=1500000 \
     debug.sf.early_gl_phase_offset_ns=3000000 \
     debug.sf.early_gl_app_phase_offset_ns=15000000 \
-    ro.surface_flinger.vsync_event_phase_offset_ns=2000000 \
-    ro.surface_flinger.vsync_sf_event_phase_offset_ns=6000000 \
     debug.sf.enable_gl_backpressure=1 \
     ro.surface_flinger.use_smart_90_for_video=true \
     ro.surface_flinger.wcg_composition_dataspace=143261696 \
@@ -70,6 +70,8 @@ PRODUCT_PROPERTY_OVERRIDES += \
     ro.surface_flinger.has_HDR_display=true \
     ro.surface_flinger.protected_contents=true \
     ro.surface_flinger.max_frame_buffer_acquired_buffers=3
+#    ro.surface_flinger.vsync_event_phase_offset_ns=2000000 \
+#    ro.surface_flinger.vsync_sf_event_phase_offset_ns=6000000 \
 
 #
 PRODUCT_PROPERTY_OVERRIDES += \
@@ -127,7 +129,6 @@ PRODUCT_PROPERTY_OVERRIDES += \
 	dev.pm.dyn_samplingrate=1 \
 	persist.sys.strictmode.disable=true \
 	persist.radio.dynamic_sar=false \
-	persist.vendor.radio.rat_on=combine \
 	persist.radio.NO_STAPA=1 \
 	persist.radio.VT_HYBRID_ENABLE=1 \
 	persist.radio.modem_dynamic_sar_state=close

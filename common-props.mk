@@ -82,10 +82,9 @@ PRODUCT_PROPERTY_OVERRIDES += \
     vendor.iop.enable_uxe=0 \
     persist.vendor.perfservice.disable=1
 
-# RCS and IMS
+# RCS
 PRODUCT_PROPERTY_OVERRIDES += \
-    persist.rcs.supported=0 \
-    persist.vendor.ims.disableUserAgent=0
+    persist.rcs.supported=0
 
 # Nitz
 PRODUCT_PROPERTY_OVERRIDES += \
