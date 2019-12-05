@@ -446,7 +446,7 @@
         <ctl name="ADC2 MUX" value="INP3" />
         <ctl name="INT3_MI2S_TX Channels" value="Two" />
         <ctl name="Ultrasound Microphone Index" value="1" />
-        <ctl name="DEC1 Volume" value="84" />
+        <ctl name="DEC1 Volume" value="90" />
         <ctl name="ADC1 Volume" value="6" />
         <ctl name="ADC3 Volume" value="6" />
     </path>
