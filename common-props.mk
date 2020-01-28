@@ -21,7 +21,7 @@ PRODUCT_PROPERTY_OVERRIDES += \
 
 # CNE and DPM
 PRODUCT_PROPERTY_OVERRIDES += \
-    persist.vendor.cne.feature=0 \
+    persist.vendor.cne.feature=1 \
     persist.vendor.dpm.feature=1 \
     persist.vendor.dpm.loglevel=0 \
     persist.vendor.dpm.nsrm.bkg.evt=3955
@@ -31,7 +31,8 @@ PRODUCT_PROPERTY_OVERRIDES += \
     persist.data.df.dev_name=rmnet_usb0 \
     persist.vendor.data.profile_update=true \
     persist.vendor.data.mode=concurrent \
-    ro.vendor.use_data_netmgrd=true
+    ro.vendor.use_data_netmgrd=true \
+    persist.data.netmgrd.qos.enable=true
 
 # Display density
 PRODUCT_PROPERTY_OVERRIDES += \
