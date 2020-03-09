@@ -1,0 +1,502 @@
+From 19f8ce4175b74710f07babf89c884a4893561fe8 Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Fri, 3 Jan 2020 11:12:09 +0200
+Subject: [PATCH 5/6] ForceDrark blacklist [2/2]
+
+---
+ res/layout/forcedark_blacklist.xml            |  71 ++++
+ res/layout/forcedark_item.xml                 |  45 +++
+ res/values/cr_strings.xml                     |   5 +
+ res/xml/crdroid_settings_ui.xml               |   8 +
+ .../fragments/ui/ForceDarkBlackList.java      | 314 ++++++++++++++++++
+ 5 files changed, 443 insertions(+)
+ create mode 100644 res/layout/forcedark_blacklist.xml
+ create mode 100644 res/layout/forcedark_item.xml
+ create mode 100644 src/com/crdroid/settings/fragments/ui/ForceDarkBlackList.java
+
+diff --git a/res/layout/forcedark_blacklist.xml b/res/layout/forcedark_blacklist.xml
+new file mode 100644
+index 0000000..2432df1
+--- /dev/null
++++ b/res/layout/forcedark_blacklist.xml
+@@ -0,0 +1,71 @@
++<?xml version="1.0" encoding="utf-8"?>
++<!--
++/*
++** Copyright 2013, The Android Open Source Project
++**
++** Licensed under the Apache License, Version 2.0 (the "License");
++** you may not use this file except in compliance with the License.
++** You may obtain a copy of the License at
++**
++**     http://www.apache.org/licenses/LICENSE-2.0
++**
++** Unless required by applicable law or agreed to in writing, software
++** distributed under the License is distributed on an "AS IS" BASIS,
++** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++** See the License for the specific language governing permissions and
++** limitations under the License.
++*/
++-->
++
++<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
++    xmlns:app="http://schemas.android.com/apk/res-auto"
++    xmlns:tools="http://schemas.android.com/tools"
++    android:layout_width="match_parent"
++    android:layout_height="match_parent"
++    android:minHeight="?android:attr/listPreferredItemHeight"
++    android:gravity="center_vertical"
++    android:paddingEnd="?android:attr/scrollbarSize"
++    android:background="?android:attr/selectableItemBackground"
++    android:orientation="vertical">
++
++    <LinearLayout
++        android:layout_width="wrap_content"
++        android:layout_height="wrap_content"
++        android:orientation="horizontal">
++
++        <RelativeLayout
++                android:layout_width="match_parent"
++                android:layout_height="wrap_content">
++
++            <TextView android:id="@+id/forcedark_blacklist_title"
++                android:layout_width="wrap_content"
++                android:layout_height="wrap_content"
++                android:singleLine="true"
++                android:textAppearance="?android:attr/textAppearanceMedium"
++                android:ellipsize="marquee"
++                android:text="@string/forcedark_blacklist_title"
++                android:padding="6dp"
++                android:fadingEdge="horizontal" />
++
++            <TextView android:id="@+id/forcedark_blacklist_summary"
++                android:layout_width="wrap_content"
++                android:layout_height="wrap_content"
++                android:layout_below="@id/forcedark_blacklist_title"
++                android:layout_alignStart="@id/forcedark_blacklist_title"
++                android:textAppearance="?android:attr/textAppearanceSmall"
++                android:textColor="?android:attr/textColorSecondary"
++                android:text="@string/forcedark_blacklist_summary"
++                android:padding="6dp"
++                android:maxLines="4" />
++
++        </RelativeLayout>
++
++    </LinearLayout>
++
++    <ListView
++        android:id="@+id/forcedark_list"
++        android:clickable="true"
++        android:layout_width="match_parent"
++        android:layout_height="match_parent"/>
++
++</LinearLayout>
+diff --git a/res/layout/forcedark_item.xml b/res/layout/forcedark_item.xml
+new file mode 100644
+index 0000000..61c3cf7
+--- /dev/null
++++ b/res/layout/forcedark_item.xml
+@@ -0,0 +1,45 @@
++<?xml version="1.0" encoding="utf-8"?>
++<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
++    android:layout_width="match_parent"
++    android:layout_height="wrap_content"
++    android:orientation="vertical"
++    android:padding="3dp">
++    <LinearLayout
++        android:layout_width="match_parent"
++        android:layout_height="wrap_content"
++        android:orientation="horizontal"
++        android:padding="5dp">
++        <ImageView
++            android:id="@+id/app_icon"
++            android:focusable="false"
++            android:layout_width="48dp"
++            android:layout_height="48dp"/>
++        <LinearLayout
++            android:layout_marginLeft="3dp"
++            android:layout_width="match_parent"
++            android:layout_height="wrap_content"
++            android:orientation="vertical"
++            android:layout_marginStart="3dp">
++            <TextView
++                android:id="@+id/app_name"
++                android:layout_width="match_parent"
++                android:layout_height="wrap_content"
++                android:textStyle="bold"
++                android:textSize="16dp"
++                android:focusable="false"
++                android:text="App Name"/>
++            <TextView
++                android:id="@+id/app_package"
++                android:text="App Package Name"
++                android:layout_width="match_parent"
++                android:focusable="false"
++                android:layout_height="wrap_content" />
++        </LinearLayout>
++        <Switch 
++                android:id="@+id/app_forcedark_blocked"
++                android:layout_width="wrap_content"
++                android:layout_height="wrap_content"
++                android:focusable="false"
++                android:layout_alignParentRight="true" />
++    </LinearLayout>
++</LinearLayout>
+diff --git a/res/values/cr_strings.xml b/res/values/cr_strings.xml
+index b60d8c2..f3b15b3 100644
+--- a/res/values/cr_strings.xml
++++ b/res/values/cr_strings.xml
+@@ -2127,6 +2127,11 @@
+     <string name="custom_seekbar_default_value_to_set">Default value: <xliff:g id="v">%s</xliff:g>\nLong tap to set</string>
+     <string name="custom_seekbar_default_value_is_set">Default value is set</string>
+ 
++    <!-- ForceDark blacklist -->
++    <string name="forcedark_blacklist_title">Force Dark blacklist</string>
++    <string name="forcedark_blacklist_summary">Do not apply dark theme on selected apps</string>
++    <string name="forcedark_blacklist_save">Save</string>
++
+     <!-- Blink flashlight for incoming calls -->
+     <string name="flashlight_on_call_title">Blink Flashlight on call</string>
+     <string name="flashlight_on_call_disabled">Disabled</string>
+diff --git a/res/xml/crdroid_settings_ui.xml b/res/xml/crdroid_settings_ui.xml
+index f1a2610..a17726c 100644
+--- a/res/xml/crdroid_settings_ui.xml
++++ b/res/xml/crdroid_settings_ui.xml
+@@ -101,6 +101,14 @@
+         android:summary="@string/style_summary"
+         android:fragment="com.crdroid.settings.fragments.ui.ThemeSettings" />
+ 
++    <!-- ForceDark blacklist -->
++    <Preference
++        android:key="forcedark_blacklist"
++        android:icon="@drawable/ic_themes"
++        android:title="@string/forcedark_blacklist_title"
++        android:summary="@string/forcedark_blacklist_summary"
++        android:fragment="com.crdroid.settings.fragments.ui.ForceDarkBlackList"/>
++
+     <!--<Preference
+         android:key="trans_porn"
+         android:icon="@drawable/ic_transparency"
+diff --git a/src/com/crdroid/settings/fragments/ui/ForceDarkBlackList.java b/src/com/crdroid/settings/fragments/ui/ForceDarkBlackList.java
+new file mode 100644
+index 0000000..0d42e86
+--- /dev/null
++++ b/src/com/crdroid/settings/fragments/ui/ForceDarkBlackList.java
+@@ -0,0 +1,314 @@
++/*
++ * Copyright (C) 2019 faust93 at monumentum@gmail.com
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++package com.crdroid.settings.fragments.ui;
++
++import android.content.ContentResolver;
++import android.content.Context;
++import android.os.Bundle;
++import android.os.UserHandle;
++import android.app.AlarmManager;
++import android.util.Log;
++import android.view.View;
++import android.view.ViewGroup;
++import android.preference.PreferenceFragment;
++import android.view.LayoutInflater;
++import android.widget.Switch;
++import android.widget.ListView;
++import android.widget.ArrayAdapter;
++import android.widget.TextView;
++import android.widget.CheckBox;
++import android.widget.CompoundButton;
++import android.widget.AdapterView;
++import android.widget.BaseAdapter;
++import android.widget.ImageView;
++import android.graphics.drawable.Drawable;
++import android.provider.Settings;
++import android.view.Menu;
++import android.view.MenuInflater;
++import android.view.MenuItem;
++import android.app.AlertDialog;
++import android.content.DialogInterface;
++import android.content.pm.ApplicationInfo;
++import android.content.pm.PackageInfo;
++import android.content.pm.PackageManager;
++
++import java.util.List;
++import java.util.Iterator;
++import java.util.ArrayList;
++import java.util.Map;
++import java.util.HashMap;
++import java.util.Collections;
++import android.os.AsyncTask;
++
++import com.android.internal.logging.nano.MetricsProto;
++import com.android.settings.SettingsPreferenceFragment;
++
++import com.crdroid.settings.R;
++
++public class ForceDarkBlackList extends SettingsPreferenceFragment {
++
++    private static final String TAG = "ForceDarkBlacklist";
++
++    private ListView mForceDarkList;
++    private LayoutInflater mLayoutInflater;
++    private List<AppList> mInstalledApps;
++    private Map<String, Boolean> mForceDarkAppState;
++    private ForceDarkListAdapter mListAdapter;
++
++    private static final int MENU_SAVE = Menu.FIRST;
++
++    public class ForceDarkListAdapter extends BaseAdapter {
++        public List<AppList> listStorage;
++
++        public ForceDarkListAdapter(Context context, List<AppList> customizedListView) {
++            //mLayoutInflater =(LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
++            listStorage = customizedListView;
++        }
++
++        @Override
++        public int getCount() {
++            return listStorage.size();
++        }
++
++        @Override
++        public Object getItem(int position) {
++            return position;
++        }
++
++        @Override
++        public long getItemId(int position) {
++            return position;
++        }
++
++        @Override
++        public View getView(int position, View convertView, ViewGroup parent) {
++
++            ViewHolder listViewHolder;
++            if(convertView == null){
++                listViewHolder = new ViewHolder();
++                convertView = mLayoutInflater.inflate(R.layout.forcedark_item, parent, false);
++
++                listViewHolder.textInListView = (TextView)convertView.findViewById(R.id.app_name);
++                listViewHolder.imageInListView = (ImageView)convertView.findViewById(R.id.app_icon);
++                listViewHolder.packageInListView = (TextView)convertView.findViewById(R.id.app_package);
++                listViewHolder.switchInListView = (Switch)convertView.findViewById(R.id.app_forcedark_blocked);
++                convertView.setTag(listViewHolder);
++            }else{
++                listViewHolder = (ViewHolder)convertView.getTag();
++            }
++            listViewHolder.textInListView.setText(listStorage.get(position).getName());
++            listViewHolder.imageInListView.setImageDrawable(listStorage.get(position).getIcon());
++            listViewHolder.packageInListView.setText(listStorage.get(position).getPackages());
++            Boolean checked = mForceDarkAppState.get(listStorage.get(position).getPackages());
++            listViewHolder.switchInListView.setChecked(checked.booleanValue());
++            return convertView;
++        }
++
++        class ViewHolder{
++            TextView textInListView;
++            ImageView imageInListView;
++            TextView packageInListView;
++            Switch  switchInListView;
++        }
++    }
++
++    public class AppList {
++        private String name;
++        Drawable icon;
++        private String packages;
++
++        public AppList(String name, Drawable icon, String packages) {
++            this.name = name;
++            this.icon = icon;
++            this.packages = packages;
++        }
++
++        public String getName() {
++            return name;
++        }
++
++        public Drawable getIcon() {
++            return icon;
++        }
++
++        public String getPackages() {
++            return packages;
++        }
++
++    }
++
++    private class LoadApplications extends AsyncTask<Void, Void, Void> {
++		
++		@Override
++		protected Void doInBackground(Void... params) {
++            updateAppsList();
++            updateFDBlockedAppsList();
++            mForceDarkList = (ListView) getActivity().findViewById(R.id.forcedark_list);
++            mListAdapter = new ForceDarkListAdapter(getActivity(), mInstalledApps);
++			return null;
++		}
++
++		@Override
++		protected void onCancelled() {
++			super.onCancelled();
++		}
++
++		@Override
++		protected void onPostExecute(Void result) {
++			mForceDarkList.setAdapter(mListAdapter);
++            mForceDarkList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
++            @Override
++            public void onItemClick(AdapterView<?> adapterView, View view, final int i, long l) {
++                boolean toggle;
++                String pkg = mInstalledApps.get(i).getPackages();
++                Boolean checked = mForceDarkAppState.get(pkg);
++                Switch sw = (Switch)view.findViewById(R.id.app_forcedark_blocked);
++                if(checked.booleanValue()){
++                    toggle = false;
++                } else {
++                    toggle = true;
++                }
++                sw.setChecked(toggle);
++                mForceDarkAppState.put(pkg, new Boolean(toggle));
++            }
++            });
++			super.onPostExecute(result);
++		}
++
++		@Override
++		protected void onPreExecute() {
++            mForceDarkAppState = new HashMap<String, Boolean>();
++			super.onPreExecute();
++		}
++
++		@Override
++		protected void onProgressUpdate(Void... values) {
++			super.onProgressUpdate(values);
++		}
++	}
++
++    @Override
++    public void onCreate(Bundle savedInstanceState) {
++        super.onCreate(savedInstanceState);
++        new LoadApplications().execute();
++    }
++
++    @Override
++    public View onCreateView(LayoutInflater inflater, ViewGroup container,
++                             Bundle savedInstanceState) {
++        mLayoutInflater = inflater;
++        setHasOptionsMenu(true);
++        return inflater.inflate(R.layout.forcedark_blacklist, container, false);
++    }
++
++    @Override
++    public void onActivityCreated(Bundle savedInstanceState) {
++        super.onActivityCreated(savedInstanceState);
++    }
++
++    @Override
++    public int getMetricsCategory() {
++        return MetricsProto.MetricsEvent.CRDROID_SETTINGS;
++    }
++
++    @Override
++    public void onResume() {
++        super.onResume();
++    }
++
++    @Override
++    public void onPause() {
++        super.onPause();
++    }
++
++    @Override
++    public void onDestroy() {
++        super.onDestroy();
++    }
++
++    private boolean isSystemPackage(PackageInfo pkgInfo) {
++        return (pkgInfo.applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0;
++    }
++
++    private void updateAppsList() {        
++        PackageManager pm = getPackageManager();
++        List<PackageInfo> packs = getPackageManager().getInstalledPackages(0);
++        mInstalledApps = new ArrayList<AppList>();
++        //List<PackageInfo> packs = getPackageManager().getInstalledPackages(PackageManager.GET_PERMISSIONS);
++        for (int i = 0; i < packs.size(); i++) {
++            PackageInfo p = packs.get(i);
++            if ((!isSystemPackage(p))) {
++                String appName = p.applicationInfo.loadLabel(getPackageManager()).toString();
++                Drawable icon = p.applicationInfo.loadIcon(getPackageManager());
++                String packages = p.applicationInfo.packageName;
++                mInstalledApps.add(new AppList(appName, icon, packages));
++                mForceDarkAppState.put(packages, new Boolean(false));
++            }
++        }
++    }
++
++    private void updateFDBlockedAppsList() {
++        String blackListFD = Settings.System.getString(getActivity().getContentResolver(),
++                Settings.System.FORCEDARK_BLACK_LIST);
++
++        if (blackListFD!=null && blackListFD.length()!=0){
++            String[] parts = blackListFD.split("\\|");
++            for(int i = 0; i < parts.length; i++){
++                mForceDarkAppState.put(parts[i], new Boolean(true));
++            }
++        }
++    }
++
++    private void save(){
++        StringBuffer buffer = new StringBuffer();
++        Iterator<String> nextState = mForceDarkAppState.keySet().iterator();
++        while(nextState.hasNext()){
++            String name = nextState.next();
++            Boolean state=mForceDarkAppState.get(name);
++            if(state.booleanValue()){
++                buffer.append(name + "|");
++            }
++        }
++        if(buffer.length()>0){
++            buffer.deleteCharAt(buffer.length() - 1);
++        }
++        Log.d(TAG, buffer.toString());
++        Settings.System.putString(getActivity().getContentResolver(),
++                Settings.System.FORCEDARK_BLACK_LIST, buffer.toString());
++    }
++
++    @Override
++    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
++        menu.add(0, MENU_SAVE, 0, R.string.forcedark_blacklist_save)
++                .setIcon(R.drawable.ic_wakelockblocker_save)
++                .setAlphabeticShortcut('s')
++                .setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM |
++                        MenuItem.SHOW_AS_ACTION_WITH_TEXT);
++    }
++
++    @Override
++    public boolean onOptionsItemSelected(MenuItem item) {
++        switch (item.getItemId()) {
++            case MENU_SAVE:
++                    save();
++                return true;
++            default:
++                return false;
++        }
++    }
++
++}
+-- 
+2.24.1
+

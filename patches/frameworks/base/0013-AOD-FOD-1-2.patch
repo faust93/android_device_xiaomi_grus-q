@@ -1,0 +1,106 @@
+From 3cb5ef3b5d19b65ccbfdb03a6cf26e333ee8a74f Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Wed, 12 Feb 2020 16:18:30 +0200
+Subject: [PATCH 13/13] AOD FOD [1/2]
+
+---
+ core/java/android/provider/Settings.java      |  6 +++++
+ .../phone/NotificationPanelView.java          | 23 +++++++++++++++++++
+ 2 files changed, 29 insertions(+)
+
+diff --git a/core/java/android/provider/Settings.java b/core/java/android/provider/Settings.java
+index 831e4a94..f71f487d 100644
+--- a/core/java/android/provider/Settings.java
++++ b/core/java/android/provider/Settings.java
+@@ -4977,6 +4977,12 @@ public final class Settings {
+          */
+         public static final String REFRESH_RATE_SETTING = "refresh_rate_setting";
+ 
++        /**
++         * Whether to enable Ambient FOD Mode
++         * @hide
++         */
++        public static final String AOD_FOD_MODE = "aod_fod_mode";
++
+         /**
+          * Whether to enable Ambient edge light
+          * @hide
+diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/phone/NotificationPanelView.java b/packages/SystemUI/src/com/android/systemui/statusbar/phone/NotificationPanelView.java
+index cde9eef9..e126141a 100644
+--- a/packages/SystemUI/src/com/android/systemui/statusbar/phone/NotificationPanelView.java
++++ b/packages/SystemUI/src/com/android/systemui/statusbar/phone/NotificationPanelView.java
+@@ -169,6 +169,8 @@ public class NotificationPanelView extends PanelView implements
+             "system:" + Settings.System.PULSE_AMBIENT_LIGHT;
+     private static final String LOCKSCREEN_STATUS_BAR =
+             "system:" + Settings.System.LOCKSCREEN_STATUS_BAR;
++    private static final String AOD_FOD_MODE =
++            "system:" + Settings.System.AOD_FOD_MODE;
+ 
+     private static final Rect mDummyDirtyRect = new Rect(0, 0, 1, 1);
+     private static final Rect mEmptyRect = new Rect();
+@@ -212,6 +214,10 @@ public class NotificationPanelView extends PanelView implements
+                 public void onFinishedGoingToSleep(int why) {
+                     mFirstBypassAttempt = mKeyguardBypassController.getBypassEnabled();
+                     mDelayShowingKeyguardStatusBar = false;
++                    if (mDozing && mAODFODmode) {
++                        mKeyguardStatusView.setVisibility(View.INVISIBLE);
++                        mKeyguardBottomArea.setVisibility(View.INVISIBLE);
++                    }
+                 }
+             };
+     private final KeyguardMonitor.Callback mKeyguardMonitorCallback =
+@@ -344,6 +350,7 @@ public class NotificationPanelView extends PanelView implements
+     private String mLastCameraLaunchSource = KeyguardBottomAreaView.CAMERA_LAUNCH_SOURCE_AFFORDANCE;
+     private NotificationLightsView mPulseLightsView;
+     private boolean mPulseLights;
++    private boolean mAODFODmode;
+     private boolean mShowLockscreenStatusBar;
+ 
+     private Runnable mHeadsUpExistenceChangedRunnable = new Runnable() {
+@@ -585,6 +592,7 @@ public class NotificationPanelView extends PanelView implements
+         Dependency.get(TunerService.class).addTunable(this, DOUBLE_TAP_SLEEP_LOCKSCREEN);
+         Dependency.get(TunerService.class).addTunable(this, PULSE_AMBIENT_LIGHT);
+         Dependency.get(TunerService.class).addTunable(this, LOCKSCREEN_STATUS_BAR);
++        Dependency.get(TunerService.class).addTunable(this, AOD_FOD_MODE);
+         mUpdateMonitor.registerCallback(mKeyguardUpdateCallback);
+         // Theme might have changed between inflating this view and attaching it to the window, so
+         // force a call to onThemeChanged
+@@ -625,6 +633,10 @@ public class NotificationPanelView extends PanelView implements
+                 mShowLockscreenStatusBar =
+                         TunerService.parseIntegerSwitch(newValue, true);
+                 break;
++            case AOD_FOD_MODE:
++                mAODFODmode =
++                        TunerService.parseIntegerSwitch(newValue, false);
++                break;
+             default:
+                 break;
+         }
+@@ -3377,6 +3389,11 @@ public class NotificationPanelView extends PanelView implements
+ 
+         if (dozing) {
+             mBottomAreaShadeAlphaAnimator.cancel();
++        } else {
++            if (mAODFODmode) {
++                mKeyguardStatusView.setVisibility(View.VISIBLE);
++                mKeyguardBottomArea.setVisibility(View.VISIBLE);
++            }
+         }
+ 
+         if (mBarState == StatusBarState.KEYGUARD
+@@ -3411,6 +3428,12 @@ public class NotificationPanelView extends PanelView implements
+         if (!mPulsing && !mDozing) {
+             mAnimateNextPositionUpdate = false;
+         }
++
++        if (mAODFODmode) {
++            mKeyguardStatusView.setVisibility(mPulsing ? View.VISIBLE : View.GONE);
++            mKeyguardBottomArea.setVisibility(mPulsing ? View.VISIBLE : View.GONE);
++        }
++
+         if ((mPulseLightsView != null) && mPulseLights) {
+             mPulseLightsView.setVisibility(mPulsing ? View.VISIBLE : View.GONE);
+             if (mPulsing) {
+-- 
+2.24.1
+

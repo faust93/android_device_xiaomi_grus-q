@@ -1,0 +1,60 @@
+From 0da89114ed90f6c50f6027ade85decf60f8fc127 Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Sun, 15 Dec 2019 13:07:56 +0200
+Subject: [PATCH 09/13] Forcedark blacklist [1/2]
+
+---
+ core/java/android/provider/Settings.java |  6 ++++++
+ core/java/android/view/ViewRootImpl.java | 12 ++++++++++++
+ 2 files changed, 18 insertions(+)
+
+diff --git a/core/java/android/provider/Settings.java b/core/java/android/provider/Settings.java
+index 123cb4e3..cbd7ce50 100644
+--- a/core/java/android/provider/Settings.java
++++ b/core/java/android/provider/Settings.java
+@@ -4813,6 +4813,12 @@ public final class Settings {
+          */
+         public static final String POCKET_JUDGE = "pocket_judge";
+ 
++        /**
++         * List of force dark exceptions
++         * @hide
++         */
++        public static final String FORCEDARK_BLACK_LIST = "forcedark_black_list";
++
+         /**
+          * List of alarms blocks selected
+          * @hide
+diff --git a/core/java/android/view/ViewRootImpl.java b/core/java/android/view/ViewRootImpl.java
+index 18635089..1ec4c92c 100644
+--- a/core/java/android/view/ViewRootImpl.java
++++ b/core/java/android/view/ViewRootImpl.java
+@@ -76,6 +76,8 @@ import android.os.RemoteException;
+ import android.os.SystemClock;
+ import android.os.SystemProperties;
+ import android.os.Trace;
++import android.os.UserHandle;
++import android.provider.Settings;
+ import android.sysprop.DisplayProperties;
+ import android.util.AndroidRuntimeException;
+ import android.util.DisplayMetrics;
+@@ -1215,6 +1217,16 @@ public final class ViewRootImpl implements ViewParent,
+         if (useAutoDark) {
+             boolean forceDarkAllowedDefault =
+                     SystemProperties.getBoolean(ThreadedRenderer.DEBUG_FORCE_DARK, false);
++
++            if(forceDarkAllowedDefault){
++                String pkgName = mContext.getPackageName();
++                String blackListFD = Settings.System.getString(mContext.getContentResolver(),
++                    Settings.System.FORCEDARK_BLACK_LIST);
++
++                if (blackListFD!=null && blackListFD.length()!=0 && blackListFD.contains(pkgName)){
++                    forceDarkAllowedDefault = false;
++                }
++            }
+             TypedArray a = mContext.obtainStyledAttributes(R.styleable.Theme);
+             useAutoDark = a.getBoolean(R.styleable.Theme_isLightTheme, true)
+                     && a.getBoolean(R.styleable.Theme_forceDarkAllowed, forceDarkAllowedDefault);
+-- 
+2.24.1
+

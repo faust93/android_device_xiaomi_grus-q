@@ -1,0 +1,139 @@
+From f9f69e89b80b903cc5e51bbe4c5ed8bdbd7cf24b Mon Sep 17 00:00:00 2001
+From: faust93 <monumentum@gmail.com>
+Date: Sun, 1 Mar 2020 09:06:39 +0200
+Subject: [PATCH] AOD FOD [2/2]
+
+---
+ res/values/cr_strings.xml                     |  4 +++
+ res/xml/doze_settings.xml                     |  5 ++++
+ .../settings/fragments/ui/DozeSettings.java   | 25 +++++++++++++++++++
+ .../settings/fragments/ui/doze/Utils.java     |  8 +++++-
+ 4 files changed, 41 insertions(+), 1 deletion(-)
+
+diff --git a/res/values/cr_strings.xml b/res/values/cr_strings.xml
+index 273a86e..c726bca 100644
+--- a/res/values/cr_strings.xml
++++ b/res/values/cr_strings.xml
+@@ -2498,6 +2498,10 @@
+     <string name="alert_slider_notifications_title">Alert slider notifications</string>
+     <string name="alert_slider_notifications_summary">Display notification when changing alert slider position</string>
+ 
++    <!--AOD FOD -->
++    <string name="always_on_fod_title">Always on FOD</string>
++    <string name="always_on_fod_summary">Always On Display mode with FOD icon only. Increased battery usage.</string>
++
+     <!-- QS blur -->
+     <string name="qs_blur_title">Background blur</string>
+     <string name="qs_blur_summary">Blur empty space in notification panel below quick settings</string>
+diff --git a/res/xml/doze_settings.xml b/res/xml/doze_settings.xml
+index 06183fc..3a4b907 100644
+--- a/res/xml/doze_settings.xml
++++ b/res/xml/doze_settings.xml
+@@ -28,6 +28,11 @@
+         android:title="@string/doze_always_on_title"
+         android:summary="@string/doze_always_on_summary" />
+ 
++    <com.crdroid.settings.preferences.SecureSettingSwitchPreference
++        android:key="aod_fod_mode"
++        android:title="@string/always_on_fod_title"
++        android:summary="@string/always_on_fod_summary" />
++
+     <com.crdroid.settings.preferences.SecureSettingSwitchPreference
+         android:key="pulse_on_new_tracks"
+         android:title="@string/pulse_on_new_tracks_title"
+diff --git a/src/com/crdroid/settings/fragments/ui/DozeSettings.java b/src/com/crdroid/settings/fragments/ui/DozeSettings.java
+index a036e01..4197e4e 100644
+--- a/src/com/crdroid/settings/fragments/ui/DozeSettings.java
++++ b/src/com/crdroid/settings/fragments/ui/DozeSettings.java
+@@ -16,6 +16,7 @@
+ 
+ package com.crdroid.settings.fragments.ui;
+ 
++import android.util.Log;
+ import android.app.Activity;
+ import android.app.AlertDialog;
+ import android.content.ContentResolver;
+@@ -59,6 +60,7 @@ public class DozeSettings extends SettingsPreferenceFragment implements Indexabl
+     public static final String TAG = "DozeSettings";
+ 
+     private static final String KEY_DOZE_ALWAYS_ON = "doze_always_on";
++    private static final String KEY_AOD_FOD_MODE = "aod_fod_mode";
+ 
+     private static final String PULSE_AMBIENT_LIGHT_COLOR = "pulse_ambient_light_color";
+ 
+@@ -72,6 +74,7 @@ public class DozeSettings extends SettingsPreferenceFragment implements Indexabl
+ 
+     private ColorPickerPreference mEdgeLightColorPreference;
+ 
++    private SwitchPreference mAodFodPreference;
+     private SwitchPreference mDozeAlwaysOnPreference;
+     private SwitchPreference mTiltPreference;
+     private SwitchPreference mPickUpPreference;
+@@ -104,6 +107,10 @@ public class DozeSettings extends SettingsPreferenceFragment implements Indexabl
+                 (PreferenceCategory) getPreferenceScreen().findPreference(CATEG_DOZE_SENSOR);
+ 
+         mDozeAlwaysOnPreference = (SwitchPreference) findPreference(KEY_DOZE_ALWAYS_ON);
++        mDozeAlwaysOnPreference.setOnPreferenceChangeListener(this);
++
++        mAodFodPreference = (SwitchPreference) findPreference(KEY_AOD_FOD_MODE);
++        mAodFodPreference.setOnPreferenceChangeListener(this);
+ 
+         mTiltPreference = (SwitchPreference) findPreference(KEY_DOZE_TILT_GESTURE);
+         mTiltPreference.setOnPreferenceChangeListener(this);
+@@ -117,6 +124,10 @@ public class DozeSettings extends SettingsPreferenceFragment implements Indexabl
+         mPocketPreference = (SwitchPreference) findPreference(KEY_DOZE_POCKET_GESTURE);
+         mPocketPreference.setOnPreferenceChangeListener(this);
+ 
++        if (mAodFodPreference.isChecked()) {
++            mDozeAlwaysOnPreference.setEnabled(false);
++        }
++
+         // Hide sensor related features if the device doesn't support them
+         if (!Utils.getTiltSensor(context) && !Utils.getPickupSensor(context) && !Utils.getProximitySensor(context)) {
+             getPreferenceScreen().removePreference(dozeSensorCategory);
+@@ -187,6 +198,20 @@ public class DozeSettings extends SettingsPreferenceFragment implements Indexabl
+             if (newValue != null)
+                 sensorWarning(context);
+             return true;
++        } else if (preference == mAodFodPreference) {
++            boolean value = (Boolean) newValue;
++            Settings.System.putIntForUser(resolver, Settings.System.AOD_FOD_MODE,
++                 value ? 1 : 0, UserHandle.USER_CURRENT);
++            Settings.Secure.putIntForUser(resolver, Settings.Secure.DOZE_ALWAYS_ON,
++                 value ? 1 : 0, UserHandle.USER_CURRENT);
++            mDozeAlwaysOnPreference.setChecked(value);
++            mDozeAlwaysOnPreference.setEnabled(value != true);
++            return true;
++        } else if (preference == mDozeAlwaysOnPreference) {
++            boolean value = (Boolean) newValue;
++            Settings.Secure.putIntForUser(resolver, Settings.Secure.DOZE_ALWAYS_ON,
++                 value ? 1 : 0, UserHandle.USER_CURRENT);
++            return true;
+         }
+         return false;
+     }
+diff --git a/src/com/crdroid/settings/fragments/ui/doze/Utils.java b/src/com/crdroid/settings/fragments/ui/doze/Utils.java
+index 407c39e..25befab 100644
+--- a/src/com/crdroid/settings/fragments/ui/doze/Utils.java
++++ b/src/com/crdroid/settings/fragments/ui/doze/Utils.java
+@@ -80,10 +80,16 @@ public final class Utils {
+     }
+ 
+     public static boolean isDozeAlwaysOnEnabled(Context context) {
+-        return Settings.Secure.getIntForUser(context.getContentResolver(),
++
++        boolean aod = Settings.Secure.getIntForUser(context.getContentResolver(),
+                 Settings.Secure.DOZE_ALWAYS_ON, context.getResources().getBoolean(
+                 com.android.internal.R.bool.config_dozeAlwaysOnEnabled) ? 1 : 0,
+                 UserHandle.USER_CURRENT) != 0;
++
++        boolean aodfod = Settings.System.getIntForUser(context.getContentResolver(),
++                Settings.System.AOD_FOD_MODE, 0, UserHandle.USER_CURRENT) != 0;
++
++        return aod || aodfod;
+     }
+ 
+     public static void enableService(Context context) {
+-- 
+2.24.1
+
